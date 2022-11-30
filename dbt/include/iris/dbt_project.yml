@@ -1,0 +1,5 @@
+name: dbt_iris
+version: 1.3.0-b1
+config-version: 2
+
+macro-paths: ["macros"]

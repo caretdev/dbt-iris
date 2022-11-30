@@ -1,0 +1,15 @@
+fixed:
+  type: iris
+prompts:
+  host:
+    hint: "your host name"
+  port:
+    default: 1972
+    type: "int"
+  user:
+    hint: "dev username"
+  password:
+    hint: "dev password"
+    hide_input: true
+  namespace:
+    hint: "namespace"
