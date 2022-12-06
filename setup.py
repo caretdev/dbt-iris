@@ -8,11 +8,11 @@ package_version = "1.3.0b3"
 description = """The InterSystems IRIS adapter plugin for dbt"""
 
 thelibFolder = os.path.dirname(os.path.realpath(__file__))
-requirementPath = thelibFolder + '/requirements.txt'
+requirementPath = thelibFolder + "/requirements.txt"
 
 requirements = []
 if os.path.isfile(requirementPath):
-    with open('./requirements.txt') as f:
+    with open("./requirements.txt") as f:
         for line in f.read().splitlines():
             requirements.append(line)
 
@@ -21,7 +21,7 @@ setup(
     version=package_version,
     description=description,
     long_description=description,
-    license='MIT',
+    license="MIT",
     author="CaretDev",
     author_email="info@caretdev.com",
     url="https://github.com/caretdev/dbt-iris",
@@ -29,15 +29,12 @@ setup(
     include_package_data=True,
     install_requires=requirements,
     classifiers=[
-        'Development Status :: 3 - Alpha',
-
-        'License :: OSI Approved :: MIT License',
-        
-        'Operating System :: OS Independent',
-
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
+        "Development Status :: 3 - Alpha",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     python_requires=">3.7,<3.11",
 )

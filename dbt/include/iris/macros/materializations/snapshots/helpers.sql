@@ -40,7 +40,7 @@ select * from (
             {{ strategy.scd_id }} as dbt_scd_id
 
         from ( {{ source_sql }} )
-    
+
     ) as source_data
     left outer join (
         select *,
