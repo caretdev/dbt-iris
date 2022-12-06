@@ -42,12 +42,12 @@ class TestGenericTestsIRIS(BaseGenericTests):
     pass
 
 
-# class TestSnapshotCheckColsIRIS(BaseSnapshotCheckCols):
-#     pass
+class TestSnapshotCheckColsIRIS(BaseSnapshotCheckCols):
+    pass
 
 
-# class TestSnapshotTimestampIRIS(BaseSnapshotTimestamp):
-#     pass
+class TestSnapshotTimestampIRIS(BaseSnapshotTimestamp):
+    pass
 
 
 class TestBaseAdapterMethodIRIS(BaseAdapterMethod):

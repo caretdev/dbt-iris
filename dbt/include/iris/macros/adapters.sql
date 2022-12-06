@@ -8,7 +8,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 {% endmacro %}
 
 {% macro iris__current_timestamp() -%}
-  current_timestamp()
+  current_timestamp
 {%- endmacro %}
 
 {% macro iris__list_schemas(database) -%}
@@ -24,6 +24,19 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 
 {% macro iris__create_schema(schema_relation) -%}
   {# no-op #}
+{% endmacro %}
+
+{% macro create_function_hash() -%}
+  {% call statement('_', auto_begin=False) -%}
+    CREATE OR REPLACE FUNCTION HASH(alg VARCHAR(''), str VARCHAR(''))
+    PROCEDURE
+    RETURNS VARCHAR('')
+    LANGUAGE PYTHON
+    {
+        import hashlib
+        return hashlib.new(alg, str.encode()).hexdigest()
+    }
+  {%- endcall %}
 {% endmacro %}
 
 {% macro iris__drop_schema(relation) -%}
@@ -51,11 +64,17 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
   #}
   {%- set tmp_column = column_name + "__dbt_alter" -%}
 
-  {% call statement('alter_column_type') %}
-    alter table {{ relation }} add column {{ adapter.quote(tmp_column) }} {{ new_column_type }};
-    update {{ relation }} set {{ adapter.quote(tmp_column) }} = {{ adapter.quote(column_name) }};
-    alter table {{ relation }} drop column {{ adapter.quote(column_name) }} cascade;
-    alter table {{ relation }} rename column {{ adapter.quote(tmp_column) }} to {{ adapter.quote(column_name) }}
+  {% call statement('alter_column_type 1', fetch_result=False) %}
+    alter table {{ relation }} add column {{ adapter.quote(tmp_column) }} {{ new_column_type }}
+  {% endcall %}
+  {% call statement('alter_column_type 2', fetch_result=False) %}
+    update {{ relation }} set {{ adapter.quote(tmp_column) }} = {{ adapter.quote(column_name) }}
+  {% endcall %}
+  {% call statement('alter_column_type 3', fetch_result=False) %}
+    alter table {{ relation }} drop column {{ adapter.quote(column_name) }} cascade
+  {% endcall %}
+  {% call statement('alter_column_type 4', fetch_result=False) %}
+    alter table {{ relation }} modify {{ adapter.quote(tmp_column) }} rename {{ adapter.quote(column_name) }}
   {% endcall %}
 
 {% endmacro %}
@@ -107,9 +126,13 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 
 {% macro iris__create_table_as(temporary, relation, sql) -%}
   {%- set sql_header = config.get('sql_header', none) -%}
-
-  {{ sql_header if sql_header is not none }}
+  {% if temporary: -%}
+    {% call statement('drop_relation') %}
+      drop table if exists {{ relation }} cascade %DELDATA
+    {% endcall %}
+  {%- endif %}
   /* create_table_as */
+  {{ sql_header if sql_header is not none }}
   create {% if temporary: -%}global temporary{%- endif %} table
     {{ relation }}
   as
