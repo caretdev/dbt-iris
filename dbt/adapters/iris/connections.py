@@ -155,6 +155,10 @@ class IRISConnectionManager(SQLConnectionManager):
             fire_event(SQLQuery(conn_name=connection.name, sql=log_sql))
             pre = time.time()
 
+            sql = sql.strip()
+            if sql.endswith(';'):
+                sql = sql[0:-1]
+            
             cursor = connection.handle.cursor()
             many = (
                 bindings

@@ -33,8 +33,8 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
     RETURNS VARCHAR('')
     LANGUAGE PYTHON
     {
-        import hashlib
-        return hashlib.new(alg, str.encode()).hexdigest()
+      import hashlib
+      return hashlib.new(alg, str.encode()).hexdigest()
     }
   {%- endcall %}
 {% endmacro %}

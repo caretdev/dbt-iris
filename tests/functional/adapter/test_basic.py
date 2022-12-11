@@ -21,17 +21,16 @@ class TestSimpleMaterializationsIRIS(BaseSimpleMaterializations):
 class TestSingularTestsIRIS(BaseSingularTests):
     pass
 
-
-# class TestSingularTestsEphemeralIRIS(BaseSingularTestsEphemeral):
-#     pass
+class TestSingularTestsEphemeralIRIS(BaseSingularTestsEphemeral):
+    pass
 
 
 class TestEmptyIRIS(BaseEmpty):
     pass
 
 
-# class TestEphemeralIRIS(BaseEphemeral):
-#     pass
+class TestEphemeralIRIS(BaseEphemeral):
+    pass
 
 
 class TestIncrementalIRIS(BaseIncremental):
