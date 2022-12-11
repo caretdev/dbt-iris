@@ -156,9 +156,9 @@ class IRISConnectionManager(SQLConnectionManager):
             pre = time.time()
 
             sql = sql.strip()
-            if sql.endswith(';'):
+            if sql.endswith(";"):
                 sql = sql[0:-1]
-            
+
             cursor = connection.handle.cursor()
             many = (
                 bindings
