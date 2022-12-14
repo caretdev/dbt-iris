@@ -1,0 +1,13 @@
+.pytest_cache/
+dist/
+env/
+logs/
+.bumpversion.cfg
+.env
+.flake8
+.git/
+.github/
+.mypy_cache/
+.vscode/
+build/
+dbt_iris.egg-info/
