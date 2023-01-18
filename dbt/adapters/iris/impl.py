@@ -1,4 +1,5 @@
 from typing import Optional, List
+import re
 import agate
 from dbt.exceptions import invalid_type_error
 from dbt.exceptions import RuntimeException
@@ -44,6 +45,11 @@ class IRISAdapter(SQLAdapter):
     @classmethod
     def convert_boolean_type(cls, agate_table: agate.Table, col_idx: int) -> str:
         return "bit"
+
+    @classmethod
+    def convert_number_type(cls, agate_table, col_idx):
+        decimals = agate_table.aggregate(agate.MaxPrecision(col_idx))
+        return "float" if decimals else "integer"
 
     @classmethod
     def convert_datetime_type(cls, agate_table: agate.Table, col_idx: int) -> str:
@@ -147,3 +153,28 @@ class IRISAdapter(SQLAdapter):
         return [
             col for (col_name, col) in from_columns.items() if col_name.lower() in missing_columns
         ]
+
+    def submit_python_job(self, parsed_model: dict, compiled_code: str):
+        schema = parsed_model["schema"]
+        identifier = parsed_model["alias"]
+
+        # IRIS Has issues with Python's comments
+        compiled_code = re.sub(r'^[\s\t]*#.*$', '', compiled_code, flags=re.M)
+
+        proc_name = f'"{schema}"."{identifier}__dbt_sp"'
+        create_procedure = f"""
+CREATE OR REPLACE PROCEDURE {proc_name} ()
+RETURNS VARCHAR(10)
+LANGUAGE PYTHON
+{{
+{compiled_code}
+}}
+"""
+
+        response, _ = self.execute(create_procedure, auto_begin=False, fetch=False)
+        response, _ = self.execute(f'SELECT {proc_name}()', auto_begin=False, fetch=False)
+        self.execute(f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False)
+        return response
+
+    def valid_incremental_strategies(self):
+        return ["append", "merge", "delete+insert"]
