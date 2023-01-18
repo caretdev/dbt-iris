@@ -159,7 +159,7 @@ class IRISAdapter(SQLAdapter):
         identifier = parsed_model["alias"]
 
         # IRIS Has issues with Python's comments
-        compiled_code = re.sub(r'^[\s\t]*#.*$', '', compiled_code, flags=re.M)
+        compiled_code = re.sub(r"^[\s\t]*#.*$", "", compiled_code, flags=re.M)
 
         proc_name = f'"{schema}"."{identifier}__dbt_sp"'
         create_procedure = f"""
@@ -172,7 +172,7 @@ LANGUAGE PYTHON
 """
 
         response, _ = self.execute(create_procedure, auto_begin=False, fetch=False)
-        response, _ = self.execute(f'SELECT {proc_name}()', auto_begin=False, fetch=False)
+        response, _ = self.execute(f"SELECT {proc_name}()", auto_begin=False, fetch=False)
         self.execute(f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False)
         return response
 
