@@ -124,19 +124,25 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 
 {%- endmacro %}
 
-{% macro iris__create_table_as(temporary, relation, sql) -%}
-  {%- set sql_header = config.get('sql_header', none) -%}
-  {% if temporary: -%}
-    {% call statement('drop_relation') %}
-      drop table if exists {{ relation }} cascade %DELDATA
-    {% endcall %}
-  {%- endif %}
-  /* create_table_as */
-  {{ sql_header if sql_header is not none }}
-  create {% if temporary: -%}global temporary{%- endif %} table
-    {{ relation }}
-  as
-    {{ sql }}
+{% macro iris__create_table_as(temporary, relation, compiled_code, language='sql') -%}
+  {%- if language == 'sql' -%}
+    {%- set sql_header = config.get('sql_header', none) -%}
+    {% if temporary: -%}
+      {% call statement('drop_relation') %}
+        drop table if exists {{ relation }} cascade %DELDATA
+      {% endcall %}
+    {%- endif %}
+    /* create_table_as */
+    {{ sql_header if sql_header is not none }}
+    create {% if temporary: -%}global temporary{%- endif %} table
+      {{ relation }}
+    as
+      {{ compiled_code }}
+  {%- elif language == 'python' -%}
+    {{ py_write_table(compiled_code=compiled_code, target_relation=relation, temporary=temporary) }}
+  {%- else -%}
+      {% do exceptions.raise_compiler_error("iris__create_table_as macro didn't get supported language, it got %s" % language) %}
+  {%- endif -%}
 {%- endmacro %}
 
 {% macro iris__rename_relation(from_relation, to_relation) -%}
