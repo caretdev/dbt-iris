@@ -4,7 +4,7 @@ import os
 
 package_name = "dbt-iris"
 # make sure this always matches dbt/adapters/{adapter}/__version__.py
-package_version = "1.3.1"
+package_version = "1.3.1.1"
 description = """The InterSystems IRIS adapter plugin for dbt"""
 
 thelibFolder = os.path.dirname(os.path.realpath(__file__))
