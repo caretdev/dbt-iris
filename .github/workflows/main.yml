@@ -69,8 +69,6 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
   test-build:
-    needs: build
-
     runs-on: ubuntu-latest
 
     steps:
