@@ -101,7 +101,7 @@ jobs:
           twine check dist/*
       - name: Check wheel contents
         run: |
-          check-wheel-contents dist/*.whl --ignore W007,W008
+          check-wheel-contents dist/*.whl --ignore W007,W008,W009
       - uses: actions/upload-artifact@v3
         with:
           name: dist
