@@ -69,7 +69,7 @@ jobs:
           dbt --version
 
       - name: Run Tests
-        run: tox -e py3{7,8,9,10}
+        run: tox -e 'py3{7,8,9,10}'
 
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure
@@ -97,7 +97,7 @@ jobs:
           docker run --rm -d -p 1972:1972 dbt-iris:$GITHUB_SHA \
           -a 'iris session iris -U %SYS "##class(Security.Users).UnExpireUserPasswords(\"*\")"'
       - name: Run Tests
-        run: tox -e py3{7,8,9,10}-iris
+        run: tox -e 'py3{7,8,9,10}-iris'
 
   build:
     needs:
