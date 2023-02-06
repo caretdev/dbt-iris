@@ -114,7 +114,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: install dependencies
+        run: |
+          pip install --user --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install -e .
       - name: Build Docker image
         run: docker build -t dbt-iris:$GITHUB_SHA .
+      - name: Run Container
+        run: |
+          docker run --rm -d -p 1972:1972 dbt-iris:$GITHUB_SHA \
+          -a 'iris session iris -U %SYS "##class(Security.Users).UnExpireUserPasswords(\"*\")"'
       - name: Run Tests
-        run: docker run --rm dbt-iris:$GITHUB_SHA run_tests_in_docker.sh
+        run: pytest
