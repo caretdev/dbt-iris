@@ -1,11 +1,13 @@
 version: '3'
 services:
   iris:
-    image: intersystemsdc/iris-community
+    build: .
     command:
       - -a
       # by default it starts with a requirement to change passwords for system users
       - iris session iris -U %SYS '##class(Security.Users).UnExpireUserPasswords("*")'
     ports:
-      - 1972:1972
-      - 52773:52773
+      - 1975:1972
+      - 52775:52773
+    volumes:
+      - ~/iris.key:/usr/irissys/mgr/iris.key

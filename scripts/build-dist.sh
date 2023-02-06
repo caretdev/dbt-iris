@@ -1,20 +1,33 @@
 #!/bin/bash
 
+packages=("iris" "intersystems_iris" "irisnative")
+for package in ${packages[@]};
+do 
+    rm -f ./$package
+    package_path=`python -c "import importlib.util; print(importlib.util.find_spec('${package}').submodule_search_locations[0])"`
+    ln -s $package_path ./$package
+done
+
 set -eo pipefail
 
-DBT_PATH="$( cd "$(dirname "$0")/.." ; pwd -P )"
+PROJECT="$( cd "$(dirname "$0")/.." ; pwd -P )"
 
-PYTHON_BIN=${PYTHON_BIN:-python}
+PYTHON_BIN=${PYTHON_BIN:-python3}
 
 echo "$PYTHON_BIN"
 
 set -x
 
-rm -rf "$DBT_PATH"/dist
-rm -rf "$DBT_PATH"/build
-mkdir -p "$DBT_PATH"/dist
+rm -rf "$PROJECT"/dist
+rm -rf "$PROJECT"/build
+mkdir -p "$PROJECT"/dist
 
-cd "$DBT_PATH"
+cd "$PROJECT"
 $PYTHON_BIN setup.py sdist bdist_wheel
 
 set +x
+
+for package in ${packages[@]};
+do 
+    rm -f ./$package
+done

@@ -4,14 +4,11 @@
 
     {% set update_sql %}
     update {{ target }}
-    set dbt_valid_to = (
-        SELECT
-            DBT_INTERNAL_SOURCE.dbt_valid_to
-        from {{ source }} as DBT_INTERNAL_SOURCE
-        where DBT_INTERNAL_SOURCE.dbt_scd_id = {{ target }}.dbt_scd_id
-            and DBT_INTERNAL_SOURCE.dbt_change_type = 'update'
-    )
-    WHERE dbt_valid_to is null
+    set dbt_valid_to = DBT_INTERNAL_SOURCE.dbt_valid_to
+    from {{ source }} as DBT_INTERNAL_SOURCE
+    where DBT_INTERNAL_SOURCE.dbt_scd_id = {{ target }}.dbt_scd_id
+      and DBT_INTERNAL_SOURCE.dbt_change_type in ('update', 'delete')
+      and {{ target }}.dbt_valid_to is null;
     {% endset %}
 
     {% do adapter.add_query(update_sql, auto_begin=False) %}

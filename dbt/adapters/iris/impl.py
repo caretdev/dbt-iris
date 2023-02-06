@@ -53,7 +53,7 @@ class IRISAdapter(SQLAdapter):
 
     @classmethod
     def convert_datetime_type(cls, agate_table: agate.Table, col_idx: int) -> str:
-        return "timestamp"
+        return "datetime"
 
     def timestamp_add_sql(self, add_to: str, number: int = 1, interval: str = "hour") -> str:
         return f"dateadd('{interval}', {number}, {add_to})"
@@ -172,7 +172,7 @@ LANGUAGE PYTHON
 """
 
         response, _ = self.execute(create_procedure, auto_begin=False, fetch=False)
-        response, _ = self.execute(f"SELECT {proc_name}()", auto_begin=False, fetch=False)
+        response, _ = self.execute(f"SELECT {proc_name}()", auto_begin=False, fetch=True)
         self.execute(f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False)
         return response
 

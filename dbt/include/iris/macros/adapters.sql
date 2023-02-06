@@ -30,7 +30,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
   {% call statement('_', auto_begin=False) -%}
     CREATE OR REPLACE FUNCTION HASH(alg VARCHAR(''), str VARCHAR(''))
     PROCEDURE
-    RETURNS VARCHAR('')
+    RETURNS VARCHAR(1024)
     LANGUAGE PYTHON
     {
       import hashlib
@@ -87,6 +87,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
       table_schema as "schema",
       case when table_type = 'BASE TABLE' then 'table'
            when table_type = 'VIEW' then 'view'
+           when table_type = 'GLOBAL TEMPORARY' then 'table'
            else table_type
       end as table_type
     from information_schema.tables
@@ -134,7 +135,9 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
     {%- endif %}
     /* create_table_as */
     {{ sql_header if sql_header is not none }}
-    create {% if temporary: -%}global temporary{%- endif %} table
+    create 
+    /* {% if temporary: -%}global temporary{%- endif %} */
+    table
       {{ relation }}
     as
       {{ compiled_code }}

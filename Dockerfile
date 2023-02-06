@@ -1,19 +1,6 @@
-FROM intersystemsdc/iris-community
+FROM containers.intersystems.com/intersystems/iris-community:2022.3.0.606.0
 
-USER root
+ENV PIP_TARGET=${ISC_PACKAGE_INSTALLDIR}/mgr/python
 
-RUN apt-get update && apt-get -y install git
-
-USER ${ISC_PACKAGE_MGRUSER}
-
-COPY --chown=${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_MGRGROUP} . /home/irisowner/dbt-iris
-
-WORKDIR /home/irisowner/dbt-iris
-
-ENV PATH="$PATH:/home/irisowner/.local/bin/"
-ENV PYTHONPATH="/home/irisowner/dbt-iris"
-
-RUN python3 -m pip install --upgrade pip \
-  && pip install -r requirements-dev.txt -r requirements.txt
-
-ENTRYPOINT [ "bash" ]
+RUN python3 -m pip install --upgrade pip && \
+  pip install sqlalchemy~=1.4.46 pandas sqlalchemy-iris

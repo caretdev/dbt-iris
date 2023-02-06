@@ -16,7 +16,7 @@
         {{ strategy.scd_id }} as dbt_scd_id,
         {{ strategy.updated_at }} as dbt_updated_at,
         {{ strategy.updated_at }} as dbt_valid_from,
-        null as dbt_valid_to
+        cast(null as timestamp) as dbt_valid_to
     from (
         {{ sql }}
     ) sbq
@@ -24,41 +24,6 @@
 {% endmacro %}
 
 {% macro iris__snapshot_staging_table(strategy, source_sql, target_relation) -%}
-select * from (
-    select
-        'insert' as dbt_change_type,
-        source_data.*
-
-    from (
-
-        select
-            *,
-            {{ strategy.unique_key }} as dbt_unique_key,
-            {{ strategy.updated_at }} as dbt_updated_at,
-            {{ strategy.updated_at }} as dbt_valid_from,
-            null as dbt_valid_to,
-            {{ strategy.scd_id }} as dbt_scd_id
-
-        from ( {{ source_sql }} )
-
-    ) as source_data
-    left outer join (
-        select *,
-            {{ strategy.unique_key }} as dbt_unique_key
-
-        from {{ target_relation }}
-        where dbt_valid_to is null
-
-    ) as snapshotted_data on snapshotted_data.dbt_unique_key = source_data.dbt_unique_key
-    where snapshotted_data.dbt_unique_key is null
-        or (
-            snapshotted_data.dbt_unique_key is not null
-        and (
-            {{ strategy.row_changed }}
-        )
-    )
-) as insertions
-union all
 select * from (
     select
         'update' as dbt_change_type,
@@ -88,6 +53,42 @@ select * from (
         {{ strategy.row_changed }}
     )
 ) as updates
+union all
+select * from (
+    select
+        'insert' as dbt_change_type,
+        source_data.*
+
+    from (
+
+        select
+            *,
+            {{ strategy.unique_key }} as dbt_unique_key,
+            {{ strategy.updated_at }} as dbt_updated_at,
+            {{ strategy.updated_at }} as dbt_valid_from,
+            cast(null as timestamp) as dbt_valid_to,
+            {{ strategy.scd_id }} as dbt_scd_id
+
+        from ( {{ source_sql }} )
+
+    ) as source_data
+    left outer join (
+        select *,
+            {{ strategy.unique_key }} as dbt_unique_key
+
+        from {{ target_relation }}
+        where dbt_valid_to is null
+
+    ) as snapshotted_data on snapshotted_data.dbt_unique_key = source_data.dbt_unique_key
+    where snapshotted_data.dbt_unique_key is null
+        or (
+            snapshotted_data.dbt_unique_key is not null
+        and (
+            {{ strategy.row_changed }}
+        )
+    )
+) as insertions
+
 {%- if strategy.invalidate_hard_deletes %}
 union all
 select * from (

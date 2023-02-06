@@ -90,7 +90,7 @@ jobs:
           pip --version
       - name: Build distributions
         run: |
-          pip install git+https://daimor:${{ secrets.GITTOKEN }}@github.com/caretdev/intersystems-irispython.git
+          pip install https://github.com/intersystems-community/intersystems-irispython/releases/download/3.4.1/intersystems_iris-3.4.1-py3-none-any.whl
           ./scripts/build-dist.sh
 
       - name: Show distributions

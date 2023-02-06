@@ -64,21 +64,16 @@
 {% macro py_write_table(compiled_code, target_relation, temporary=False) %}
 {{ compiled_code }}
 
-import sys
-paths = [
-    '/home/irisowner/sqlalchemy',
-    '/home/irisowner/sqlalchemy-iris',
-    '/home/irisowner/intersystems-irispython',
-]
-for path in paths:
-    if path not in sys.path:
-        sys.path.insert(1, path)
 try:
   import pandas
+except:
+  raise Exception("Missing required dependency: pandas")
+
+try:
   from sqlalchemy import create_engine
   import intersystems_iris
 except:
-  return "ERROR"
+  raise Exception("Missing required dependencies: sqlalchemy, sqlalchemy-iris")
 
 class DataFrame(pandas.DataFrame):
     def limit(self, num):
@@ -93,21 +88,17 @@ class IRISSession:
     def __init__(self) -> None:
         self.engine = create_engine('iris+emb:///')
 
-def table(self, full_name) -> DataFrame:
-    [schema, table] = full_name.split('.') if '.' in full_name else [self.default_schema, full_name]
-    df = pandas.read_sql_table(table, self.engine, schema=schema)
-    return DataFrame(df)
+    def table(self, full_name) -> DataFrame:
+        [schema, table] = full_name.split('.') if '.' in full_name else [self.default_schema, full_name]
+        df = pandas.read_sql_table(table, self.engine, schema=schema)
+        return DataFrame(df)
 
     def to_sql(self, df, table, schema):
         df.to_sql(table, self.engine, if_exists='replace', schema=schema)
 
-try:
-  session = IRISSession()
-  dbt = dbtObj(session.table)
-  df = model(dbt, session)
-  session.to_sql(df, '{{ target_relation.identifier }}', '{{ target_relation.schema }}')
-  return "OK"
-except Exception as ex:
-  print(ex)
-  return "ERROR"
+session = IRISSession()
+dbt = dbtObj(session.table)
+df = model(dbt, session)
+session.to_sql(df, '{{ target_relation.identifier }}', '{{ target_relation.schema }}')
+return "OK"
 {% endmacro %}
