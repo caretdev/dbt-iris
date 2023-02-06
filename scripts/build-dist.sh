@@ -2,7 +2,7 @@
 
 packages=("iris" "intersystems_iris" "irisnative")
 for package in ${packages[@]};
-do 
+do
     rm -f ./$package
     package_path=`python -c "import importlib.util; print(importlib.util.find_spec('${package}').submodule_search_locations[0])"`
     ln -s $package_path ./$package
@@ -28,6 +28,6 @@ $PYTHON_BIN setup.py sdist bdist_wheel
 set +x
 
 for package in ${packages[@]};
-do 
+do
     rm -f ./$package
 done

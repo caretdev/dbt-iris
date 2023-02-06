@@ -135,7 +135,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
     {%- endif %}
     /* create_table_as */
     {{ sql_header if sql_header is not none }}
-    create 
+    create
     /* {% if temporary: -%}global temporary{%- endif %} */
     table
       {{ relation }}
