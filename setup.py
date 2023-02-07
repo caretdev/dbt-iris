@@ -26,7 +26,7 @@ setup(
     author_email="info@caretdev.com",
     url="https://github.com/caretdev/dbt-iris",
     packages=find_namespace_packages(
-        include=["dbt", "dbt.*", "iris", "intersystems_iris.*", "irisnative"]
+        include=["dbt", "dbt.*", "iris", "intersystems_iris", "intersystems_iris.*", "irisnative"]
     ),
     include_package_data=True,
     install_requires=requirements,
