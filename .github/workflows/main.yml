@@ -70,7 +70,8 @@ jobs:
           dbt --version
 
       - name: Run Tests
-        run: tox -e 'py3{7,8,9,10}'
+        run: |
+          tox -e py37,py38,py39,py310
 
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure
@@ -99,10 +100,7 @@ jobs:
           -a 'iris session iris -U %SYS "##class(Security.Users).UnExpireUserPasswords(\"*\")"'
       - name: Run Tests
         run: |
-          tox -e 'py37-iris'
-          tox -e 'py38-iris'
-          tox -e 'py39-iris'
-          tox -e 'py310-iris'
+          tox -e py37-iris,py38-iris,py39-iris,py310-iris
 
   build:
     needs:
