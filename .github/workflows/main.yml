@@ -155,7 +155,7 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           name: dist
-          path: dist/
+          path: dist/dbt_iris-${{ steps.set-version.outputs.version }}-py3-none-any.whl
       - name: Create Release
         id: create-release
         uses: softprops/action-gh-release@v1
@@ -163,5 +163,11 @@ jobs:
         with:
           tag_name: v${{ steps.set-version.outputs.version }}
           prerelease: ${{ github.event_name != 'release' }}
-          files: dbt_iris-${{ steps.set-version.outputs.version }}-py3-none-any.whl
+          files: dist/dbt_iris-${{ steps.set-version.outputs.version }}-py3-none-any.whl
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish package
+        if: github.event_name != 'pull_request'
+        uses: pypa/gh-action-pypi-publish@release/v1.5
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
