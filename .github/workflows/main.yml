@@ -26,7 +26,7 @@ on:
     types:
       - released
 
-permissions: read-all
+permissions: write-all
 
 # will cancel previous workflows triggered by the same event and for the same ref for PRs or same SHA otherwise
 concurrency:
