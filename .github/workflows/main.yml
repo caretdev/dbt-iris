@@ -122,7 +122,7 @@ jobs:
         run: |
           VERSION=$(sed -n '0,/package_version = \(.*\)/s//\1/p' setup.py | tr -d '"' )
           [ $GITHUB_EVENT_NAME == 'release' ] && VERSION=${{ github.event.release.tag_name }} && VERSION=${VERSION/v/}
-          [ $GITHUB_EVENT_NAME == 'push' ] && VERSION+=b$(($(git tag -l "v$VERSION.*" | sort -nt. -k4 2>/dev/null | tail -1 | cut -d. -f4)+1))
+          [ $GITHUB_EVENT_NAME == 'push' ] && VERSION+=b$(($(git tag -l "v${VERSION}b*" | sort -nt. -k4 2>/dev/null | tail -1 | cut -d b -f2)+1))
           [ $GITHUB_EVENT_NAME == 'pull_request' ] && VERSION+=-dev.${{ github.event.pull_request.number }}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           sed -i "s/package_version = .*/package_version = \"${VERSION}\"/" setup.py
