@@ -126,6 +126,7 @@ jobs:
           [ $GITHUB_EVENT_NAME == 'pull_request' ] && VERSION+=-dev.${{ github.event.pull_request.number }}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           sed -i "s/version = .*/version = \"${VERSION}\"/" dbt/adapters/iris/__version__.py
+          sed -i "s/package_version = .*/package_version = \"${VERSION}\"/" setup.py
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -183,6 +184,8 @@ jobs:
           VERSION=${{ github.event.release.tag_name }} && VERSION=${VERSION/v/}
           VERSION=`echo $VERSION | awk -F. '/[0-9]+\./{$NF++;print}' OFS=.`
           sed -i "s/version = .*/version = \"${VERSION}\"/" dbt/adapters/iris/__version__.py
+          sed -i "s/package_version = .*/package_version = \"${VERSION}\"/" setup.py
           git add dbt/adapters/iris/__version__.py
+          git add setup.py
           git commit -m 'auto bump version with release'
           git push
