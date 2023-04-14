@@ -100,7 +100,9 @@ class IRISAdapter(SQLAdapter):
                     f"got {len(row)} values, expected 4"
                 )
             _, name, _schema, relation_type = row
-            relation = self.Relation.create(database=_database, schema=_schema, identifier=name, type=relation_type)
+            relation = self.Relation.create(
+                database=_database, schema=_schema, identifier=name, type=relation_type
+            )
             relations.append(relation)
         return relations
 
