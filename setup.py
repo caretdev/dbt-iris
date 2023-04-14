@@ -2,7 +2,10 @@
 from setuptools import find_namespace_packages, setup
 import os
 
-from dbt.adapters.iris.__version__ import version as package_version
+try:
+    from dbt.adapters.iris.__version__ import version as package_version
+except ModuleNotFoundError:
+    package_version = "1.3.0"
 
 package_name = "dbt-iris"
 description = """The InterSystems IRIS adapter plugin for dbt"""
