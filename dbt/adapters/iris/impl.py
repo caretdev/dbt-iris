@@ -91,6 +91,7 @@ class IRISAdapter(SQLAdapter):
                 return []
 
         relations = []
+        _database = schema_relation.database
         for row in results:
             if len(row) != 4:
                 raise RuntimeException(
@@ -99,7 +100,7 @@ class IRISAdapter(SQLAdapter):
                     f"got {len(row)} values, expected 4"
                 )
             _, name, _schema, relation_type = row
-            relation = self.Relation.create(schema=_schema, identifier=name, type=relation_type)
+            relation = self.Relation.create(database=_database, schema=_schema, identifier=name, type=relation_type)
             relations.append(relation)
         return relations
 
@@ -112,13 +113,6 @@ class IRISAdapter(SQLAdapter):
     ) -> str:
         # TODO: IRIS does not support WITH and EXCEPT, no idea how to implement it, yet
         return "SELECT 0,0"
-
-    def get_relation(self, database: str, schema: str, identifier: str) -> Optional[IRISRelation]:  # type: ignore
-        if not self.Relation.include_policy.database:
-            database = None  # type: ignore
-
-        relation = super().get_relation(database, schema, identifier)
-        return relation
 
     def get_missing_columns(
         self, from_relation: IRISRelation, to_relation: IRISRelation

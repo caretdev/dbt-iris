@@ -98,6 +98,8 @@ class IRISConnectionManager(SQLConnectionManager):
         kwargs["username"] = credentials.username
         kwargs["password"] = credentials.password
 
+        kwargs["application_name"] = "dbt"
+
         try:
             connection.handle = dbapi.connect(**kwargs)
             connection.state = "open"
