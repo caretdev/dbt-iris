@@ -3,7 +3,7 @@ from setuptools import find_namespace_packages, setup
 import os
 
 package_name = "dbt-iris"
-package_version = "1.3.4"
+package_version = "1.3.5"
 description = """The InterSystems IRIS adapter plugin for dbt"""
 
 thelibFolder = os.path.dirname(os.path.realpath(__file__))
