@@ -3,9 +3,9 @@ import re
 import agate
 from dbt.exceptions import MacroArgTypeError
 from dbt.exceptions import DbtRuntimeError
-from dbt.adapters.base.relation import BaseRelation  # type: ignore
+from dbt.adapters.base.relation import BaseRelation
 
-from dbt.adapters.sql import SQLAdapter  # type: ignore
+from dbt.adapters.sql import SQLAdapter
 from dbt.events import AdapterLogger
 
 from dbt.adapters.iris import IRISConnectionManager
@@ -172,5 +172,5 @@ LANGUAGE PYTHON
         self.execute(f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False)
         return response
 
-    def valid_incremental_strategies(self):
+    def valid_incremental_strategies(self) -> List[str]:
         return ["append", "merge", "delete+insert"]

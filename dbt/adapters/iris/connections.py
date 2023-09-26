@@ -30,12 +30,12 @@ class IRISCredentials(Credentials):
         "user": "username",
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Return name of adapter."""
         return "iris"
 

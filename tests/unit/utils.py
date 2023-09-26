@@ -25,7 +25,7 @@ def normalize(path):
 
 
 class Obj:
-    which = 'blah'
+    which = "blah"
     single_threaded = False
 
 
@@ -115,6 +115,7 @@ def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, 
 
 def inject_plugin(plugin):
     from dbt.adapters.factory import FACTORY
+
     key = plugin.adapter.type()
     FACTORY.plugins[key] = plugin
 
@@ -125,6 +126,7 @@ def inject_adapter(value, plugin):
     """
     inject_plugin(plugin)
     from dbt.adapters.factory import FACTORY
+
     key = value.type()
     FACTORY.adapters[key] = value
 
@@ -142,7 +144,7 @@ class ContractTestCase(TestCase):
     def assert_from_dict(self, obj, dct, cls=None):
         if cls is None:
             cls = self.ContractType
-        self.assertEqual(cls.from_dict(dct),  obj)
+        self.assertEqual(cls.from_dict(dct), obj)
 
     def assert_symmetric(self, obj, dct, cls=None):
         self.assert_to_dict(obj, dct)
@@ -159,26 +161,27 @@ class ContractTestCase(TestCase):
 def generate_name_macros(package):
     from dbt.contracts.graph.parsed import ParsedMacro
     from dbt.node_types import NodeType
+
     name_sql = {}
-    for component in ('database', 'schema', 'alias'):
-        if component == 'alias':
-            source = 'node.name'
+    for component in ("database", "schema", "alias"):
+        if component == "alias":
+            source = "node.name"
         else:
-            source = f'target.{component}'
-        name = f'generate_{component}_name'
-        sql = f'{{% macro {name}(value, node) %}} {{% if value %}} {{{{ value }}}} {{% else %}} {{{{ {source} }}}} {{% endif %}} {{% endmacro %}}'
+            source = f"target.{component}"
+        name = f"generate_{component}_name"
+        sql = f"{{% macro {name}(value, node) %}} {{% if value %}} {{{{ value }}}} {{% else %}} {{{{ {source} }}}} {{% endif %}} {{% endmacro %}}"
         name_sql[name] = sql
 
-    all_sql = '\n'.join(name_sql.values())
+    all_sql = "\n".join(name_sql.values())
     for name, sql in name_sql.items():
         pm = ParsedMacro(
             name=name,
             resource_type=NodeType.Macro,
-            unique_id=f'macro.{package}.{name}',
+            unique_id=f"macro.{package}.{name}",
             package_name=package,
-            original_file_path=normalize('macros/macro.sql'),
-            root_path='./dbt_modules/root',
-            path=normalize('macros/macro.sql'),
+            original_file_path=normalize("macros/macro.sql"),
+            root_path="./dbt_modules/root",
+            path=normalize("macros/macro.sql"),
             raw_sql=all_sql,
             macro_sql=sql,
         )
