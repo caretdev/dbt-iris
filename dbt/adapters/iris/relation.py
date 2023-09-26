@@ -1,5 +1,5 @@
 from typing import Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from dbt.adapters.base.relation import BaseRelation, Policy
 from dbt.contracts.relation import ComponentName
@@ -23,8 +23,8 @@ class IRISIncludePolicy(Policy):
 
 @dataclass(frozen=True, eq=False, repr=False)
 class IRISRelation(BaseRelation):
-    quote_policy: IRISQuotePolicy = IRISQuotePolicy()
-    include_policy: IRISIncludePolicy = IRISIncludePolicy()
+    quote_policy: Policy = field(default_factory=lambda: IRISQuotePolicy())
+    include_policy: Policy = field(default_factory=lambda: IRISIncludePolicy())
 
     def matches(
         self,
@@ -42,7 +42,7 @@ class IRISRelation(BaseRelation):
 
         if not search:
             # nothing was passed in
-            raise dbt.exceptions.RuntimeException(
+            raise dbt.exceptions.DbtRuntimeError(
                 "Tried to match relation, but no search path was passed!"
             )
 

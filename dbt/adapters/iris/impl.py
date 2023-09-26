@@ -1,8 +1,8 @@
 from typing import Optional, List
 import re
 import agate
-from dbt.exceptions import invalid_type_error
-from dbt.exceptions import RuntimeException
+from dbt.exceptions import MacroArgTypeError
+from dbt.exceptions import DbtRuntimeError
 from dbt.adapters.base.relation import BaseRelation  # type: ignore
 
 from dbt.adapters.sql import SQLAdapter  # type: ignore
@@ -81,7 +81,7 @@ class IRISAdapter(SQLAdapter):
         kwargs = {"schema_relation": schema_relation}
         try:
             results = self.execute_macro(LIST_RELATIONS_MACRO_NAME, kwargs=kwargs)
-        except RuntimeException as e:
+        except DbtRuntimeError as e:
             errmsg = getattr(e, "msg", "")
             if f"IRIS schema '{schema_relation}' not found" in errmsg:
                 return []
@@ -94,7 +94,7 @@ class IRISAdapter(SQLAdapter):
         _database = schema_relation.database
         for row in results:
             if len(row) != 4:
-                raise RuntimeException(
+                raise DbtRuntimeError(
                     "Invalid value from "
                     f'"iris__list_relations_without_caching({kwargs})", '
                     f"got {len(row)} values, expected 4"
@@ -123,7 +123,7 @@ class IRISAdapter(SQLAdapter):
         to_relation.
         """
         if not isinstance(from_relation, self.Relation):
-            invalid_type_error(
+            MacroArgTypeError(
                 method_name="get_missing_columns",
                 arg_name="from_relation",
                 got_value=from_relation,
@@ -131,7 +131,7 @@ class IRISAdapter(SQLAdapter):
             )
 
         if not isinstance(to_relation, self.Relation):
-            invalid_type_error(
+            MacroArgTypeError(
                 method_name="get_missing_columns",
                 arg_name="to_relation",
                 got_value=to_relation,

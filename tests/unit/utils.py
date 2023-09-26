@@ -35,15 +35,22 @@ def mock_connection(name):
     return conn
 
 
-def profile_from_dict(profile, profile_name, cli_vars='{}'):
+def profile_from_dict(profile, profile_name, cli_vars="{}"):
     from dbt.config import Profile
     from dbt.config.renderer import ProfileRenderer
-    from dbt.context.base import generate_base_context
     from dbt.config.utils import parse_cli_vars
+
     if not isinstance(cli_vars, dict):
         cli_vars = parse_cli_vars(cli_vars)
 
     renderer = ProfileRenderer(cli_vars)
+
+    # in order to call dbt's internal profile rendering, we need to set the
+    # flags global. This is a bit of a hack, but it's the best way to do it.
+    from dbt.flags import set_from_args
+    from argparse import Namespace
+
+    set_from_args(Namespace(), None)
     return Profile.from_raw_profile_info(
         profile,
         profile_name,
@@ -51,17 +58,16 @@ def profile_from_dict(profile, profile_name, cli_vars='{}'):
     )
 
 
-def project_from_dict(project, profile, packages=None, selectors=None, cli_vars='{}'):
-    from dbt.context.target import generate_target_context
-    from dbt.config import Project
+def project_from_dict(project, profile, packages=None, selectors=None, cli_vars="{}"):
     from dbt.config.renderer import DbtProjectYamlRenderer
     from dbt.config.utils import parse_cli_vars
+
     if not isinstance(cli_vars, dict):
         cli_vars = parse_cli_vars(cli_vars)
 
     renderer = DbtProjectYamlRenderer(profile, cli_vars)
 
-    project_root = project.pop('project-root', os.getcwd())
+    project_root = project.pop("project-root", os.getcwd())
 
     partial = PartialProject.from_dicts(
         project_root=project_root,
@@ -72,14 +78,18 @@ def project_from_dict(project, profile, packages=None, selectors=None, cli_vars=
     return partial.render(renderer)
 
 
-def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, cli_vars='{}'):
+def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, cli_vars="{}"):
     from dbt.config import Project, Profile, RuntimeConfig
+    from dbt.config.utils import parse_cli_vars
     from copy import deepcopy
+
+    if not isinstance(cli_vars, dict):
+        cli_vars = parse_cli_vars(cli_vars)
 
     if isinstance(project, Project):
         profile_name = project.profile_name
     else:
-        profile_name = project.get('profile')
+        profile_name = project.get("profile")
 
     if not isinstance(profile, Profile):
         profile = profile_from_dict(
@@ -99,12 +109,8 @@ def config_from_parts_or_dicts(project, profile, packages=None, selectors=None, 
 
     args = Obj()
     args.vars = cli_vars
-    args.profile_dir = '/dev/null'
-    return RuntimeConfig.from_parts(
-        project=project,
-        profile=profile,
-        args=args
-    )
+    args.profile_dir = "/dev/null"
+    return RuntimeConfig.from_parts(project=project, profile=profile, args=args)
 
 
 def inject_plugin(plugin):

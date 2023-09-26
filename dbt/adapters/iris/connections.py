@@ -76,12 +76,12 @@ class IRISConnectionManager(SQLConnectionManager):
             logger.debug(str(exc))
             logger.debug("Rolling back transaction.")
             self.rollback_if_open()
-            if isinstance(exc, dbt.exceptions.RuntimeException):
+            if isinstance(exc, dbt.exceptions.DbtRuntimeError):
                 # during a sql query, an internal to dbt exception was raised.
                 # this sounds a lot like a signal handler and probably has
                 # useful information, so raise it without modification.
                 raise
-            raise dbt.exceptions.RuntimeException(str(exc))
+            raise dbt.exceptions.DbtRuntimeError(str(exc))
 
     @classmethod
     def open(cls, connection):
