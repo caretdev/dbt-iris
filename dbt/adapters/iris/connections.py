@@ -104,7 +104,7 @@ class IRISConnectionManager(SQLConnectionManager):
             connection.handle = dbapi.connect(**kwargs)
             connection.state = "open"
         except Exception as e:
-            raise dbt.exceptions.FailedToConnectException(str(e))
+            raise dbt.exceptions.FailedToConnectError(str(e))
 
         return connection
 
