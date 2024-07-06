@@ -76,6 +76,21 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
   test-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - containers.intersystems.com/intersystems/iris-community:latest-em
+          - containers.intersystems.com/intersystems/iris-community:latest-preview
+        python:
+          - name: py38
+            version: "3.8"
+          - name: py39
+            version: "3.9"
+          - name: py310
+            version: "3.10"
+          - name: py311
+            version: "3.11"
     runs-on: ubuntu-latest
 
     steps:
@@ -83,23 +98,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: |
-            3.8
-            3.9
-            3.10
-            3.11
+          python-version: ${{ matrix.python.version }}
       - name: install dependencies
         run: |
           pip install tox
-      - name: Build Docker image
-        run: docker build -t dbt-iris:$GITHUB_SHA .
-      - name: Run Container
-        run: |
-          docker run --rm -d -p 1972:1972 dbt-iris:$GITHUB_SHA \
-          -a 'iris session iris -U %SYS "##class(Security.Users).UnExpireUserPasswords(\"*\")"'
+      - run: docker pull ${{ matrix.image }}
       - name: Run Tests
         run: |
-          tox -e py38-iris,py39-iris,py310-iris,py311-iris -- --container containers.intersystems.com/intersystems/iris-community:latest
+          tox -e ${{ matrix.python.name }}-iris -- --container ${{ matrix.image }}
 
   build:
     needs:
