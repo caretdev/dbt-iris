@@ -1,4 +1,4 @@
-{# 
+{#
 
 {% materialization view, adapter='iris' -%}
     -- grab current tables grants config for comparision later on

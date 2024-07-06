@@ -99,7 +99,7 @@ jobs:
           -a 'iris session iris -U %SYS "##class(Security.Users).UnExpireUserPasswords(\"*\")"'
       - name: Run Tests
         run: |
-          tox -e py38-iris,py39-iris,py310-iris,py311-iris
+          tox -e py38-iris,py39-iris,py310-iris,py311-iris -- --container containers.intersystems.com/intersystems/iris-community:latest
 
   build:
     needs:

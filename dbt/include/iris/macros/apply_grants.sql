@@ -15,20 +15,20 @@
 {% macro iris__get_show_grant_sql(relation) %}
   select grantee,privilege_type
   from (
-    select 
-      r.ROLE_NAME grantee, 
+    select
+      r.ROLE_NAME grantee,
       pr.granted_by grantor,
       pr.PRIVILEGE privilege_type,
-      $Piece(pr.NAME, '.', 1) table_schema, 
-      $Piece(pr.NAME, '.', 2) table_name 
+      $Piece(pr.NAME, '.', 1) table_schema,
+      $Piece(pr.NAME, '.', 2) table_name
     from %SQL_Manager.Roles() r, %SQL_Manager.RolePrivileges(r.ROLE_NAME) pr
     union all
-    select 
-      u.USERNAME grantee, 
+    select
+      u.USERNAME grantee,
       pu.granted_by grantor,
       pu.PRIVILEGE privilege_type,
-      $Piece(pu.NAME, '.', 1) table_schema, 
-      $Piece(pu.NAME, '.', 2) table_name 
+      $Piece(pu.NAME, '.', 1) table_schema,
+      $Piece(pu.NAME, '.', 2) table_name
     from %SQL_Manager.Users() r, %SQL_Manager.UserPrivs(u.USERNAME) pu
   ) where grantor = $username
       and grantee != $username
