@@ -1,12 +1,12 @@
 from typing import Optional, List
 import re
 import agate
-from dbt.exceptions import MacroArgTypeError
-from dbt.exceptions import DbtRuntimeError
+from dbt_common.exceptions import MacroArgTypeError
+from dbt_common.exceptions import DbtRuntimeError
 from dbt.adapters.base.relation import BaseRelation
 
 from dbt.adapters.sql import SQLAdapter
-from dbt.events import AdapterLogger
+from dbt.adapters.events.logging import AdapterLogger
 
 from dbt.adapters.iris import IRISConnectionManager
 from dbt.adapters.iris import IRISColumn

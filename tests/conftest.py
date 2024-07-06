@@ -1,23 +1,20 @@
-import pytest
+# in order to call dbt's internal profile rendering, we need to set the
+# flags global. This is a bit of a hack, but it's the best way to do it.
+from dbt.flags import set_from_args
+from argparse import Namespace
 
-import os
+set_from_args(Namespace(), None)
 
-# import json
-
-# Import the fuctional fixtures as a plugin
-# Note: fixtures with session scope need to be local
-
-pytest_plugins = ["dbt.tests.fixtures.project"]
+pytest_plugins = "dbt.tests.fixtures.project"
 
 
-# The profile dictionary, used to write out profiles.yml
-@pytest.fixture(scope="class")
-def dbt_profile_target():
-    return {
-        "type": "iris",
-        "hostname": os.getenv("DBT_IRIS_HOST", "localhost"),
-        "port": int(os.getenv("DBT_IRIS_PORT", "1972")),
-        "namespace": os.getenv("DBT_IRIS_NAMESPACE", "USER"),
-        "username": os.getenv("DBT_IRIS_USER", "_SYSTEM"),
-        "password": os.getenv("DBT_IRIS_PASS", "SYS"),
-    }
+def pytest_addoption(parser):
+    group = parser.getgroup("iris")
+
+    group.addoption(
+        "--container",
+        action="store",
+        default=None,
+        type=str,
+        help="Docker image with IRIS",
+    )

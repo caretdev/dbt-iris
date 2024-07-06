@@ -1,4 +1,5 @@
 import unittest
+from multiprocessing import get_context
 from unittest import mock
 import dbt.flags as flags
 from dbt.adapters.iris import IRISAdapter
@@ -39,12 +40,13 @@ class TestIRISAdapter(unittest.TestCase):
         }
 
         self.config = config_from_parts_or_dicts(project_cfg, profile_cfg)
+        self.mp_context = get_context("spawn")
         self._adapter = None
 
     @property
     def adapter(self):
         if self._adapter is None:
-            self._adapter = IRISAdapter(self.config)
+            self._adapter = IRISAdapter(self.config, self.mp_context)
         return self._adapter
 
     @mock.patch("dbt.adapters.iris.connections.dbapi")

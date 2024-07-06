@@ -44,12 +44,6 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
   {# no-op #}
 {% endmacro %}
 
-{% macro iris__drop_relation(relation) -%}
-    {% call statement('drop_relation', auto_begin=False) -%}
-        drop {{ relation.type }} if exists {{ relation }}
-    {%- endcall %}
-{% endmacro %}
-
 {% macro iris__check_schema_exists(database, schema) -%}
 '''Checks if schema name exists and returns number or times it shows up.'''
   {# no-op #}
@@ -120,8 +114,9 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 
   {{ sql_header if sql_header is not none }}
   /* create_view_as */
-  create table {{ relation }} as
-    {{ sql }}
+  {# create or replace view {{ relation }} #}
+  create table {{ relation }}
+  as {{ sql }}
 
 {%- endmacro %}
 

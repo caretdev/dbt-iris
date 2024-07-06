@@ -7,7 +7,7 @@ import os
 from unittest import mock
 from unittest import TestCase
 
-from hologram import ValidationError
+from dbt_common.dataclass_schema import ValidationError
 from dbt.config.project import PartialProject
 
 

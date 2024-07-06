@@ -2,25 +2,29 @@ import time
 from typing import Optional, Tuple, Any
 from contextlib import contextmanager
 from dataclasses import dataclass
-import dbt.exceptions  # noqa
-from dbt.adapters.base import Credentials
-from dbt.contracts.connection import Connection, AdapterResponse
-from dbt.events import AdapterLogger
+from dbt.exceptions import DbtRuntimeError
+from dbt.adapters.exceptions import FailedToConnectError
+from dbt.adapters.contracts.connection import Credentials
+from dbt.adapters.contracts.connection import Connection, AdapterResponse
+from dbt.adapters.events.logging import AdapterLogger
 from dbt.adapters.sql import SQLConnectionManager
-from dbt.events.functions import fire_event
-from dbt.events.types import ConnectionUsed, SQLQuery, SQLQueryStatus
+from dbt_common.events.functions import fire_event
+from dbt.adapters.events.types import ConnectionUsed, SQLQuery, SQLQueryStatus
 import intersystems_iris.dbapi._DBAPI as dbapi
+from dbt_common.helper_types import Port
+from mashumaro.jsonschema.annotations import Maximum, Minimum
+from typing_extensions import Annotated
 
 logger = AdapterLogger("iris")
 
 
-@dataclass(init=False)
+@dataclass
 class IRISCredentials(Credentials):
     hostname: str
     username: str
     password: str
-    namespace: Optional[str] = None
-    port: Optional[int] = 1972
+    port: Annotated[Port, Minimum(0), Maximum(65535)]
+    application_name: Optional[str] = "dbt"
 
     _ALIASES = {
         "namespace": "database",
@@ -29,10 +33,6 @@ class IRISCredentials(Credentials):
         "pass": "password",
         "user": "username",
     }
-
-    def __init__(self, **kwargs: Any) -> None:
-        for k, v in kwargs.items():
-            setattr(self, k, v)
 
     @property
     def type(self) -> str:
@@ -57,6 +57,7 @@ class IRISCredentials(Credentials):
             "database",
             "username",
             "schema",
+            "application_name",
         )
 
 
@@ -76,12 +77,12 @@ class IRISConnectionManager(SQLConnectionManager):
             logger.debug(str(exc))
             logger.debug("Rolling back transaction.")
             self.rollback_if_open()
-            if isinstance(exc, dbt.exceptions.DbtRuntimeError):
+            if isinstance(exc, DbtRuntimeError):
                 # during a sql query, an internal to dbt exception was raised.
                 # this sounds a lot like a signal handler and probably has
                 # useful information, so raise it without modification.
                 raise
-            raise dbt.exceptions.DbtRuntimeError(str(exc))
+            raise DbtRuntimeError(str(exc))
 
     @classmethod
     def open(cls, connection):
@@ -98,13 +99,13 @@ class IRISConnectionManager(SQLConnectionManager):
         kwargs["username"] = credentials.username
         kwargs["password"] = credentials.password
 
-        kwargs["application_name"] = "dbt"
+        kwargs["application_name"] = credentials.application_name
 
         try:
             connection.handle = dbapi.connect(**kwargs)
             connection.state = "open"
         except Exception as e:
-            raise dbt.exceptions.FailedToConnectError(str(e))
+            raise FailedToConnectError(str(e))
 
         return connection
 

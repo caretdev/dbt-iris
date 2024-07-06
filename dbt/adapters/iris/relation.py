@@ -1,10 +1,11 @@
-from typing import Optional
 from dataclasses import dataclass, field
+from typing import Optional
+from typing import FrozenSet
 
 from dbt.adapters.base.relation import BaseRelation, Policy
-from dbt.contracts.relation import ComponentName
-from dbt.utils import filter_null_values
-import dbt.exceptions
+from dbt.adapters.contracts.relation import ComponentName, RelationType
+from dbt_common.utils import filter_null_values
+from dbt.exceptions import DbtRuntimeError
 
 
 @dataclass
@@ -23,6 +24,22 @@ class IRISIncludePolicy(Policy):
 
 @dataclass(frozen=True, eq=False, repr=False)
 class IRISRelation(BaseRelation):
+    renameable_relations: FrozenSet[RelationType] = field(
+        default_factory=lambda: frozenset(
+            {
+                RelationType.Table,
+            }
+        )
+    )
+    replaceable_relations: FrozenSet[RelationType] = field(
+        default_factory=lambda: frozenset(
+            {
+                RelationType.View,
+                RelationType.Table,
+            }
+        )
+    )
+
     quote_policy: Policy = field(default_factory=lambda: IRISQuotePolicy())
     include_policy: Policy = field(default_factory=lambda: IRISIncludePolicy())
 
@@ -42,9 +59,7 @@ class IRISRelation(BaseRelation):
 
         if not search:
             # nothing was passed in
-            raise dbt.exceptions.DbtRuntimeError(
-                "Tried to match relation, but no search path was passed!"
-            )
+            raise DbtRuntimeError("Tried to match relation, but no search path was passed!")
 
         exact_match = True
         approximate_match = True
