@@ -168,9 +168,6 @@ jobs:
       - name: Publish package
         if: github.event_name != 'pull_request'
         uses: pypa/gh-action-pypi-publish@release/v1.5
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
       - uses: actions/checkout@v4
         if: github.event_name == 'release'
         with:
