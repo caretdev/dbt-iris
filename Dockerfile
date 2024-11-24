@@ -1,4 +1,4 @@
-FROM containers.intersystems.com/intersystems/iris-community:2023.2
+FROM containers.intersystems.com/intersystems/iris-community
 
 ENV PIP_TARGET=${ISC_PACKAGE_INSTALLDIR}/mgr/python
 
