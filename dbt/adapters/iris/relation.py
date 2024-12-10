@@ -27,6 +27,7 @@ class IRISRelation(BaseRelation):
     renameable_relations: FrozenSet[RelationType] = field(
         default_factory=lambda: frozenset(
             {
+                RelationType.View,
                 RelationType.Table,
             }
         )
