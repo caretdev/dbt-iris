@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Type
 from contextlib import contextmanager
 from dataclasses import dataclass
 from dbt.exceptions import DbtRuntimeError
@@ -142,7 +142,8 @@ class IRISConnectionManager(SQLConnectionManager):
         auto_begin: bool = True,
         bindings: Optional[Any] = None,
         abridge_sql_log: bool = False,
-        many=False,
+        retryable_exceptions: Tuple[Type[Exception], ...] = tuple(),
+        retry_limit: int = 1,
     ) -> Tuple[Connection, Any]:
         connection = self.get_thread_connection()
         if auto_begin and connection.transaction_open is False:

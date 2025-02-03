@@ -9,5 +9,7 @@ from dbt.include import iris
 
 
 Plugin = AdapterPlugin(
-    adapter=IRISAdapter, credentials=IRISCredentials, include_path=iris.PACKAGE_PATH  # type: ignore
+    adapter=IRISAdapter,  # type: ignore
+    credentials=IRISCredentials,
+    include_path=iris.PACKAGE_PATH,
 )

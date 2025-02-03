@@ -169,7 +169,7 @@ def generate_name_macros(package):
         else:
             source = f"target.{component}"
         name = f"generate_{component}_name"
-        sql = f"{{% macro {name}(value, node) %}} {{% if value %}} {{{{ value }}}} {{% else %}} {{{{ {source} }}}} {{% endif %}} {{% endmacro %}}"
+        sql = f"{{% macro {name}(value, node) %}} {{% if value %}} {{{{value}}}} {{% else %}} {{{{{source}}}}} {{% endif %}} {{% endmacro %}}"
         name_sql[name] = sql
 
     all_sql = "\n".join(name_sql.values())

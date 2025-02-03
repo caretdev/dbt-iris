@@ -83,12 +83,10 @@ class IRISAdapter(SQLAdapter):
             results = self.execute_macro(LIST_RELATIONS_MACRO_NAME, kwargs=kwargs)
         except DbtRuntimeError as e:
             errmsg = getattr(e, "msg", "")
-            if f"IRIS schema '{schema_relation}' not found" in errmsg:
-                return []
-            else:
+            if f"IRIS schema '{schema_relation}' not found" not in errmsg:
                 description = "Error while retrieving information about"
                 logger.debug(f"{description} {schema_relation}: {e.msg}")
-                return []
+            return []
 
         relations = []
         _database = schema_relation.database
