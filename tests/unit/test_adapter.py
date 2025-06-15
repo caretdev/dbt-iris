@@ -66,6 +66,3 @@ class TestIRISAdapter(unittest.TestCase):
         key = self.adapter.connections.get_thread_identifier()
         self.adapter.connections.thread_connections[key] = mock_connection("main")
         self.assertEqual(len(list(self.adapter.cancel_open_connections())), 0)
-
-    def test_placeholder(self):
-        pass
