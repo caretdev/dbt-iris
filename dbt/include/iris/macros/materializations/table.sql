@@ -16,7 +16,7 @@
   {%- set backup_relation = make_backup_relation(target_relation, backup_relation_type) -%}
   -- as above, the backup_relation should not already exist
   {%- set preexisting_backup_relation = load_cached_relation(backup_relation) -%}
-  -- grab current tables grants config for comparision later on
+  -- grab current tables grants config for comparison later on
   {% set grant_config = config.get('grants') %}
 
   -- drop the temp relations if they exist already in the database

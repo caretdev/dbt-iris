@@ -1,7 +1,7 @@
 {#
 
 {% materialization view, adapter='iris' -%}
-    -- grab current tables grants config for comparision later on
+    -- grab current tables grants config for comparison later on
     {% set grant_config = config.get('grants') %}
 
     {% set to_return = iris__create_or_replace_view() %}

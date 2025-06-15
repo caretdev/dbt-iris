@@ -16,7 +16,7 @@ select 1 as my_column
 simple_model_yml = """
 models:
   - name: simple_model
-    description: "is sythentic data ok? my column:"
+    description: "is synthetic data ok? my column:"
     columns:
       - name: my_column
         description: asked and answered
