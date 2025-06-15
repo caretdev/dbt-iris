@@ -121,7 +121,7 @@ class IRISAdapter(SQLAdapter):
         to_relation.
         """
         if not isinstance(from_relation, self.Relation):
-            MacroArgTypeError(
+            raise MacroArgTypeError(
                 method_name="get_missing_columns",
                 arg_name="from_relation",
                 got_value=from_relation,
@@ -129,7 +129,7 @@ class IRISAdapter(SQLAdapter):
             )
 
         if not isinstance(to_relation, self.Relation):
-            MacroArgTypeError(
+            raise MacroArgTypeError(
                 method_name="get_missing_columns",
                 arg_name="to_relation",
                 got_value=to_relation,
