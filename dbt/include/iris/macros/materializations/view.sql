@@ -1,21 +1,73 @@
-{#
+{%- materialization view, adapter='iris' -%}
 
-{% materialization view, adapter='iris' -%}
-    -- grab current tables grants config for comparison later on
-    {% set grant_config = config.get('grants') %}
+  {%- set identifier = model['alias'] -%}
 
-    {% set to_return = iris__create_or_replace_view() %}
+  {%- set old_relation = adapter.get_relation(database=database, schema=schema, identifier=identifier) -%}
+  {%- set target_relation = api.Relation.create(identifier=identifier, schema=schema, database=database,
+                                                type='view') -%}
 
-    {% set target_relation = this.incorporate(type='view') %}
+  {{ run_hooks(pre_hooks, inside_transaction=False) }}
 
-    {% do persist_docs(target_relation, model) %}
+  -- `BEGIN` happens here:
+  {{ run_hooks(pre_hooks, inside_transaction=True) }}
 
-    {% if config.get('grant_access_to') %}
-      {% for grant_target_dict in config.get('grant_access_to') %}
-        {% do adapter.grant_access_to(this, 'view', None, grant_target_dict) %}
-      {% endfor %}
-    {% endif %}
+  {% if old_relation is not none %}
+    {{ adapter.drop_relation(old_relation) }}
+  {% endif %}
 
-    {% do return(to_return) %}
+  -- build model
+  {% call statement('main') -%}
+    {{ create_view_as(target_relation, sql) }}
+  {%- endcall %}
 
-{%- endmaterialization %} #}
+  {% do persist_docs(target_relation, model) %}
+
+  {{ run_hooks(post_hooks, inside_transaction=True) }}
+
+  {{ adapter.commit() }}
+
+  {{ run_hooks(post_hooks, inside_transaction=False) }}
+
+  {{ return({'relations': [target_relation]}) }}
+
+{%- endmaterialization -%}
+
+{% macro iris__create_view_as(relation, sql) -%}
+  {%- set sql_header = config.get('sql_header', none) -%}
+
+  {{ sql_header if sql_header is not none }}
+  /* create_view_as */
+  CREATE OR REPLACE VIEW {{ relation }}
+  {# create table {{ relation }} #}
+  as {{ sql }}
+
+{%- endmacro %}
+
+{% macro iris__rename_view(from_relation, to_relation) -%}
+  {% set sql = adapter.dispatch("get_view_definition")(from_relation) %}
+  {% call statement('rename_view_main') -%}
+    {{ get_create_view_as_sql(to_relation, sql) }}
+  {%- endcall %}
+  {{ drop_relation_if_exists(from_relation) }}
+{% endmacro %}
+
+
+{% macro iris__get_view_definition(relation) %}
+  {% set sql = adapter.dispatch("get_view_definition_sql")(relation) %}
+  {% call statement('view_definition', fetch_result=true, auto_begin=false) %}
+    {{ sql }}
+  {% endcall %}
+  {% set result = load_result('view_definition').data %}
+  {% if result %}
+    {{ return("\r\n".join(result[0][0].split('\r\n')[1:None]).strip()) }}
+  {% else %}
+    {{ return('') }}
+  {% endif %}
+{% endmacro %}
+
+{% macro iris__get_view_definition_sql(relation) %}
+  SELECT VIEW_DEFINITION
+  FROM INFORMATION_SCHEMA.VIEWS
+  WHERE TABLE_SCHEMA = '{{ relation.schema if relation.schema else "SQLUser" }}'
+    AND TABLE_NAME = '{{ relation.identifier }}'
+{% endmacro %}

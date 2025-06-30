@@ -36,10 +36,11 @@ class IRISAdapter(SQLAdapter):
 
     @classmethod
     def convert_text_type(cls, agate_table, col_idx):
+        min_length = 65535
         column = agate_table.columns[col_idx]
         lengths = [len(d.encode("utf-8")) for d in column.values_without_nulls()]
-        max_len = max(lengths) if lengths else 64
-        length = max_len if max_len > 16 else 16
+        max_len = max(lengths) if lengths else min_length
+        length = max_len if max_len > min_length else min_length
         return "varchar({})".format(length)
 
     @classmethod
@@ -55,7 +56,9 @@ class IRISAdapter(SQLAdapter):
     def convert_datetime_type(cls, agate_table: agate.Table, col_idx: int) -> str:
         return "datetime"
 
-    def timestamp_add_sql(self, add_to: str, number: int = 1, interval: str = "hour") -> str:
+    def timestamp_add_sql(
+        self, add_to: str, number: int = 1, interval: str = "hour"
+    ) -> str:
         return f"dateadd('{interval}', {number}, {add_to})"
 
     def create_schema(self, schema_relation: BaseRelation) -> None:
@@ -72,7 +75,9 @@ class IRISAdapter(SQLAdapter):
             raise
 
     def check_schema_exists(self, database, schema):
-        results = self.execute_macro(LIST_SCHEMAS_MACRO_NAME, kwargs={"database": database})
+        results = self.execute_macro(
+            LIST_SCHEMAS_MACRO_NAME, kwargs={"database": database}
+        )
 
         exists = True if schema in [row[0] for row in results] else False
         return exists
@@ -140,12 +145,16 @@ class IRISAdapter(SQLAdapter):
             col.name.lower(): col for col in self.get_columns_in_relation(from_relation)
         }
 
-        to_columns = {col.name.lower(): col for col in self.get_columns_in_relation(to_relation)}
+        to_columns = {
+            col.name.lower(): col for col in self.get_columns_in_relation(to_relation)
+        }
 
         missing_columns = set(from_columns.keys()) - set(to_columns.keys())
 
         return [
-            col for (col_name, col) in from_columns.items() if col_name.lower() in missing_columns
+            col
+            for (col_name, col) in from_columns.items()
+            if col_name.lower() in missing_columns
         ]
 
     def submit_python_job(self, parsed_model: dict, compiled_code: str):
@@ -166,9 +175,32 @@ LANGUAGE PYTHON
 """
 
         response, _ = self.execute(create_procedure, auto_begin=False, fetch=False)
-        response, _ = self.execute(f"SELECT {proc_name}()", auto_begin=False, fetch=True)
-        self.execute(f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False)
+        response, _ = self.execute(
+            f"SELECT {proc_name}()", auto_begin=False, fetch=True
+        )
+        self.execute(
+            f"drop procedure if exists {proc_name}", auto_begin=False, fetch=False
+        )
         return response
 
     def valid_incremental_strategies(self) -> List[str]:
         return ["append", "merge", "delete+insert"]
+
+    def drop_relation(self, relation: BaseRelation):
+        # if relation.type == "table":
+        #     print("!!!! Dropping table with temporary property", relation)
+        #     tmp_prop = "__dbt_tmp"
+        #     try:
+        #         self.execute(
+        #             f'alter table {relation} add "{tmp_prop}" bit calculated',
+        #             auto_begin=False,
+        #             fetch=False,
+        #         )
+        #     except Exception as ex:
+        #         print(
+        #             "!!!! Failed to add temporary property, continuing anyway",
+        #             relation,
+        #             ex,
+        #         )
+
+        super().drop_relation(relation)

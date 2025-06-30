@@ -1,6 +1,5 @@
-from dbt.tests.util import get_manifest
 import pytest
-
+from dbt.tests.util import get_manifest
 from tests.functional.utils import run_dbt
 
 

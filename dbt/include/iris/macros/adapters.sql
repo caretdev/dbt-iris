@@ -7,10 +7,6 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
   {{ return('?') }}
 {% endmacro %}
 
-{% macro iris__current_timestamp() -%}
-  current_timestamp
-{%- endmacro %}
-
 {% macro iris__list_schemas(database) -%}
     {% call statement('list_schemas', fetch_result=True, auto_begin=False) -%}
         select schema_name
@@ -95,7 +91,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
       select
           column_name,
           data_type,
-          character_maximum_length,
+          NULLIF(CAST(character_maximum_length as INT),0) character_maximum_length,
           numeric_precision,
           numeric_scale
       from information_schema.columns
@@ -108,18 +104,6 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
   {{ return(sql_convert_columns_in_relation(table)) }}
 {% endmacro %}
 
-
-{% macro iris__create_view_as(relation, sql) -%}
-  {%- set sql_header = config.get('sql_header', none) -%}
-
-  {{ sql_header if sql_header is not none }}
-  /* create_view_as */
-  {# create or replace view {{ relation }} #}
-  create table {{ relation }}
-  as {{ sql }}
-
-{%- endmacro %}
-
 {% macro iris__create_table_as(temporary, relation, compiled_code, language='sql') -%}
   {%- if language == 'sql' -%}
     {%- set sql_header = config.get('sql_header', none) -%}
@@ -130,11 +114,7 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
     {%- endif %}
     /* create_table_as */
     {{ sql_header if sql_header is not none }}
-    create
-    /* {% if temporary: -%}global temporary{%- endif %} */
-    table
-      {{ relation }}
-    as
+    create {% if temporary: -%}global temporary{%- endif %} table {{ relation }} as
       {{ compiled_code }}
   {%- elif language == 'python' -%}
     {{ py_write_table(compiled_code=compiled_code, target_relation=relation, temporary=temporary) }}
@@ -144,11 +124,56 @@ dbt docs: https://docs.getdbt.com/docs/contributing/building-a-new-adapter
 {%- endmacro %}
 
 {% macro iris__rename_relation(from_relation, to_relation) -%}
-  {% set target_name = adapter.quote_as_configured(to_relation.identifier, 'identifier') %}
   {% call statement('drop_relation') %}
-    drop table if exists {{ to_relation }} cascade
+    drop {{ to_relation.type }} if exists {{ to_relation }} cascade
   {% endcall %}
-  {% call statement('rename_relation') -%}
-    alter table {{ from_relation }} rename {{ target_name }}
-  {%- endcall %}
+  {% if not from_relation.type %}
+    {% do exceptions.raise_database_error("Cannot rename a relation with a blank type: " ~ from_relation.identifier) %}
+  {% elif from_relation.type == 'table' %}
+    {% set target_name = adapter.quote_as_configured(to_relation.identifier, 'identifier') %}
+    {% do drop_related_view(from_relation) %}
+    {%- set target_name = adapter.quote_as_configured(to_relation.identifier, 'identifier') %}
+    {% call statement('rename_relation') -%}
+      alter {{ from_relation.type }} {{ from_relation }} rename {{ target_name }}
+    {%- endcall %}
+  {%- elif from_relation.type == 'view' -%}
+    {% do adapter.dispatch('rename_view')(from_relation, to_relation) %}
+  {% else -%}
+    {% do exceptions.raise_database_error("Unknown type '" ~ from_relation.type ~ "' for relation: " ~ from_relation.identifier) %}
+  {% endif %}
+
 {% endmacro %}
+
+{% macro drop_related_view(relation) %}
+
+  {% set to_drop = get_related_views(relation) %}
+
+  {% if to_drop is not none and to_drop|length > 0 %}
+    {% for view in to_drop %}
+      {% set view_relation = api.Relation.create(
+          identifier=view['VIEW_NAME'],
+          schema=view['VIEW_SCHEMA'],
+          database=relation.database,
+          type='view') %}
+      {{ drop_relation_if_exists(view_relation) }}
+    {% endfor %}
+  {% endif %}
+
+{% endmacro %}
+
+{% macro get_related_views(relation) %}
+  {% call statement('list_tables', fetch_result=True) %}
+    SELECT VIEW_SCHEMA,VIEW_NAME
+    FROM INFORMATION_SCHEMA.VIEW_TABLE_USAGE
+    WHERE TABLE_SCHEMA='{{ relation.schema }}' AND TABLE_NAME='{{ relation.identifier }}'
+  {% endcall %}
+  {{ return(load_result('list_tables').table) }}
+{% endmacro %}
+
+{# {% macro iris__rename_relation(from_relation, to_relation) -%}
+  {% set target_name = adapter.quote_as_configured(to_relation.identifier, 'identifier') %}
+  {{ print("!!!! rename_relation: " ~ from_relation.type ~ ":" ~ from_relation.identifier ~ " to " ~ to_relation.type ~ ":" ~ to_relation) }}
+  {% call statement('rename_relation') -%}
+    alter table {{ from_relation.render() }} rename {{ target_name }}
+  {%- endcall %}
+{% endmacro %} #}

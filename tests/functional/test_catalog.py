@@ -18,7 +18,7 @@ class TestCatalogRelationTypes(CatalogRelationTypes):
         [
             ("seed.test.my_seed", "table"),
             ("model.test.my_table", "table"),
-            ("model.test.my_view", "table"),
+            ("model.test.my_view", "view"),
         ],
     )
     def test_relation_types_populate_correctly(

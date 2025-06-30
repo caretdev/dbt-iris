@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple, Any, Type
+from typing import Optional, Tuple, Any, Type, Union
 from contextlib import contextmanager
 from dataclasses import dataclass
 from dbt.exceptions import DbtRuntimeError
@@ -11,6 +11,7 @@ from dbt.adapters.sql import SQLConnectionManager
 from dbt_common.events.functions import fire_event
 from dbt.adapters.events.types import ConnectionUsed, SQLQuery, SQLQueryStatus
 import intersystems_iris.dbapi._DBAPI as dbapi
+from intersystems_iris.dbapi._SQLType import SQLType
 from dbt_common.helper_types import Port
 from mashumaro.jsonschema.annotations import Maximum, Minimum
 from typing_extensions import Annotated
@@ -183,3 +184,9 @@ class IRISConnectionManager(SQLConnectionManager):
             )
 
             return connection, cursor
+
+    @classmethod
+    def data_type_code_to_name(cls, type_code: Union[int, str]) -> str:
+        if isinstance(type_code, int):
+            return SQLType(type_code).name
+        return f"unknown type_code {type_code}"

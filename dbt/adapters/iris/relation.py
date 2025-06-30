@@ -28,6 +28,7 @@ class IRISRelation(BaseRelation):
         default_factory=lambda: frozenset(
             {
                 RelationType.Table,
+                RelationType.View,
             }
         )
     )
@@ -42,6 +43,9 @@ class IRISRelation(BaseRelation):
 
     quote_policy: Policy = field(default_factory=lambda: IRISQuotePolicy())
     include_policy: Policy = field(default_factory=lambda: IRISIncludePolicy())
+
+    def __repr__(self) -> str:
+        return "<{} {} {}>".format(self.__class__.__name__, self.type, self.render())
 
     def matches(
         self,

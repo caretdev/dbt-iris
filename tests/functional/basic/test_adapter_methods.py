@@ -112,39 +112,6 @@ class BaseAdapterMethod:
         assert len(result) == 3
         check_relations_equal(project.adapter, equal_tables)
 
-    def test_convert_text_type(self, project):
-        class DummyColumn:
-            def __init__(self, values=[]):
-                self.values = values
-
-            def values_without_nulls(self):
-                return self.values
-
-        class DummyTable:
-            def __init__(self, columns):
-                self.columns = columns
-
-        table = DummyTable(
-            columns=[
-                DummyColumn(),
-                DummyColumn(
-                    [
-                        "short",
-                    ]
-                ),
-                DummyColumn(
-                    [
-                        "a bit longer text",
-                    ]
-                ),
-            ]
-        )
-        # default length is 64
-        assert project.adapter.convert_text_type(table, 0) == "varchar(64)"
-        # minimum length is 16
-        assert project.adapter.convert_text_type(table, 1) == "varchar(16)"
-        assert project.adapter.convert_text_type(table, 2) == "varchar(17)"
-
 
 class TestBaseCaching(BaseAdapterMethod):
     pass

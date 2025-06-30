@@ -111,7 +111,9 @@ view_summary_sql = """
 
 select gender, count(*) as ct from {{ref('view_copy')}}
 group by gender
+{% if config.materialized == 'table' %}
 order by gender asc
+{% endif %}
 """
 
 view_using_ref_sql = """
@@ -123,7 +125,9 @@ view_using_ref_sql = """
 
 select gender, count(*) as ct from {{ var('var_ref') }}
 group by gender
+{% if config.materialized == 'table' %}
 order by gender asc
+{% endif %}
 """
 
 properties_yml = """

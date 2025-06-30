@@ -1,6 +1,4 @@
-{% materialization incremental, adapter='iris', supported_languages=['sql', 'python'] -%}
-
-  {%- set language = model['language'] -%}
+{% materialization incremental, adapter='iris' -%}
 
   -- relations
   {%- set existing_relation = load_cached_relation(this) -%}
@@ -21,7 +19,7 @@
   -- BEGIN, in a separate transaction
   {%- set preexisting_intermediate_relation = load_cached_relation(intermediate_relation)-%}
   {%- set preexisting_backup_relation = load_cached_relation(backup_relation) -%}
-   -- grab current tables grants config for comparison later on
+   -- grab current tables grants config for comparision later on
   {% set grant_config = config.get('grants') %}
   {{ drop_relation_if_exists(preexisting_intermediate_relation) }}
   {{ drop_relation_if_exists(preexisting_backup_relation) }}
@@ -33,23 +31,25 @@
 
   {% set to_drop = [] %}
 
-  {% if existing_relation is none %}
-    {%- call statement('main', language=language) -%}
-      {{ create_table_as(False, target_relation, compiled_code, language) }}
-    {%- endcall -%}
-  {% elif full_refresh_mode %}
-    {%- call statement('main', language=language) -%}
-      {{ create_table_as(False, intermediate_relation, compiled_code, language) }}
-    {%- endcall -%}
-    {% set need_swap = true %}
-  {% else %}
-    {%- call statement('main', language=language) -%}
-      {{ create_table_as(True, temp_relation, compiled_code, language) }}
-    {%- endcall -%}
+  {% set incremental_strategy = config.get('incremental_strategy') or 'default' %}
+  {% set strategy_sql_macro_func = adapter.get_incremental_strategy_macro(context, incremental_strategy) %}
 
-    {% do adapter.expand_target_column_types(
-             from_relation=temp_relation,
-             to_relation=target_relation) %}
+  {% if existing_relation is none %}
+      {% set build_sql = get_create_table_as_sql(False, target_relation, sql) %}
+      {% set relation_for_indexes = target_relation %}
+  {% elif full_refresh_mode %}
+      {% set build_sql = get_create_table_as_sql(False, intermediate_relation, sql) %}
+      {% set relation_for_indexes = intermediate_relation %}
+      {% set need_swap = true %}
+  {% else %}
+    {% do run_query(get_create_table_as_sql(True, temp_relation, sql)) %}
+    {% set relation_for_indexes = temp_relation %}
+    {% set contract_config = config.get('contract') %}
+    {% if not contract_config or not contract_config.enforced %}
+      {% do adapter.expand_target_column_types(
+               from_relation=temp_relation,
+               to_relation=target_relation) %}
+    {% endif %}
     {#-- Process schema changes. Returns dict of changes if successful. Use source columns for upserting/merging --#}
     {% set dest_columns = process_schema_changes(on_schema_change, temp_relation, existing_relation) %}
     {% if not dest_columns %}
@@ -57,18 +57,23 @@
     {% endif %}
 
     {#-- Get the incremental_strategy, the macro to use for the strategy, and build the sql --#}
-    {% set incremental_strategy = config.get('incremental_strategy') or 'default' %}
-    {% set incremental_predicates = config.get('incremental_predicates', none) %}
-    {% set strategy_sql_macro_func = adapter.get_incremental_strategy_macro(context, incremental_strategy) %}
-    {% set strategy_arg_dict = ({'target_relation': target_relation, 'temp_relation': temp_relation, 'unique_key': unique_key, 'dest_columns': dest_columns, 'predicates': incremental_predicates }) %}
+    {% set incremental_predicates = config.get('predicates', none) or config.get('incremental_predicates', none) %}
+    {% set strategy_arg_dict = ({'target_relation': target_relation, 'temp_relation': temp_relation, 'unique_key': unique_key, 'dest_columns': dest_columns, 'incremental_predicates': incremental_predicates }) %}
+    {% set build_sql = strategy_sql_macro_func(strategy_arg_dict) %}
 
-    {%- call statement('main') -%}
-      {{ strategy_sql_macro_func(strategy_arg_dict) }}
-    {%- endcall -%}
+  {% endif %}
+
+  {% call statement("main") %}
+      {{ build_sql }}
+  {% endcall %}
+
+  {% if existing_relation is none or existing_relation.is_view or should_full_refresh() %}
+    {% do create_indexes(relation_for_indexes) %}
   {% endif %}
 
   {% if need_swap %}
-      {% do adapter.rename_relation(target_relation, backup_relation) %}
+      {# {% do adapter.drop_relation(existing_relation) %} #}
+      {% do adapter.rename_relation(existing_relation, backup_relation) %}
       {% do adapter.rename_relation(intermediate_relation, target_relation) %}
       {% do to_drop.append(backup_relation) %}
   {% endif %}
@@ -77,10 +82,6 @@
   {% do apply_grants(target_relation, grant_config, should_revoke=should_revoke) %}
 
   {% do persist_docs(target_relation, model) %}
-
-  {% if existing_relation is none or existing_relation.is_view or should_full_refresh() %}
-    {% do create_indexes(target_relation) %}
-  {% endif %}
 
   {{ run_hooks(post_hooks, inside_transaction=True) }}
 
@@ -96,3 +97,4 @@
   {{ return({'relations': [target_relation]}) }}
 
 {%- endmaterialization %}
+
