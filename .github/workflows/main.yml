@@ -80,7 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - containers.intersystems.com/intersystems/iris-community:latest-cd
+          - containers.intersystems.com/intersystems/iris-community:2024.3
+          - containers.intersystems.com/intersystems/iris-community:latest-em
           - containers.intersystems.com/intersystems/iris-community:latest-preview
         python:
           - name: py39
